@@ -8,8 +8,8 @@ export default function LearnPage() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Learn"
-        title="Financial education that sits next to the data"
-        description="The learning hub is intentionally lightweight in this first cut, but the route is ready for AI-curated explanations and targeted educational journeys."
+        title="Financial education alongside your account view"
+        description="The learning hub is intentionally lightweight in this first cut, but the route is ready for more detailed guidance and targeted educational content."
       />
 
       <section className="grid gap-4 lg:grid-cols-3">

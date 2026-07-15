@@ -49,6 +49,16 @@ export const projectionSeries = [
   { month: "Dec", baseline: 4260, optimized: 5480 },
 ];
 
+export const marketGrowthSeries = [
+  { month: "Jan", sp500: 100, nasdaq: 100, global: 100 },
+  { month: "Feb", sp500: 103.4, nasdaq: 106.2, global: 101.8 },
+  { month: "Mar", sp500: 106.7, nasdaq: 109.9, global: 103.5 },
+  { month: "Apr", sp500: 110.2, nasdaq: 112.4, global: 106.3 },
+  { month: "May", sp500: 113.8, nasdaq: 115.7, global: 108.9 },
+  { month: "Jun", sp500: 117.0, nasdaq: 120.3, global: 111.4 },
+  { month: "Jul", sp500: 119.9, nasdaq: 123.8, global: 113.7 },
+];
+
 export const categoryBreakdown = [
   { category: "Groceries", amount: 680 },
   { category: "Dining", amount: 420 },

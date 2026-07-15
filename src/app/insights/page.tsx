@@ -1,4 +1,4 @@
-import { BrainCircuit, Sparkles } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,20 +9,20 @@ export default function InsightsPage() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Insights"
-        title="A clear shell for AI-generated coaching"
-        description="The layout is ready for Bedrock summaries and recommendation flows. For now it uses stable seeded content so the demo narrative is predictable and polished."
+        title="A clear view of your financial patterns"
+        description="The layout is ready for richer account summaries and recommendation flows, while currently using stable sample content for the demo experience."
       />
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
             <CardTitle>Behavior signals</CardTitle>
-            <CardDescription>These cards can later map one-to-one with `/api/analyze` responses.</CardDescription>
+            <CardDescription>These cards are designed to reflect account analysis and pattern summaries as live data is connected.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {quickInsights.map((insight) => (
               <div key={insight.title} className="rounded-2xl bg-muted p-5">
-                <div className="flex items-center gap-2 font-medium text-primary">
+                <div className="flex items-center gap-2 font-medium text-slate-700">
                   <BrainCircuit className="h-4 w-4" />
                   {insight.title}
                 </div>
@@ -41,7 +41,7 @@ export default function InsightsPage() {
           <CardContent className="space-y-3">
             {recommendations.map((item) => (
               <div key={item} className="flex gap-3 rounded-2xl border border-border/70 p-4">
-                <Sparkles className="mt-0.5 h-4 w-4 text-accent" />
+                <BrainCircuit className="mt-0.5 h-4 w-4 text-slate-500" />
                 <p className="text-sm text-muted-foreground">{item}</p>
               </div>
             ))}

@@ -9,46 +9,46 @@ import { monthlySpending, quickInsights, transactions } from "@/lib/mock-data";
 
 const metrics = [
   {
-    label: "Spend this month",
+    label: "Monthly spend",
     value: "$3,842",
-    note: "+6.4% vs last month",
+    note: "Up 6.4% against the prior month",
     icon: Wallet,
   },
   {
-    label: "Saved automatically",
+    label: "Automated savings",
     value: "$540",
-    note: "72% of August goal",
+    note: "72% of your August target reached",
     icon: PiggyBank,
   },
   {
-    label: "Carbon-light purchases",
+    label: "Lower-impact purchases",
     value: "64%",
-    note: "4 greener choices identified",
+    note: "Four more choices aligned with your goals",
     icon: Leaf,
   },
 ];
 
 const roadmap = [
-  "Replace mock transaction loader with Open Banking or CSV import.",
-  "Switch recommendation routes to Bedrock-generated plans when AWS credentials are configured.",
-  "Add auth, user profiles, and persisted goals once the demo flow is approved.",
+  "Connect live transaction data through Open Banking or a secure file import flow.",
+  "Replace seeded recommendations with richer account-linked guidance once live data access is available.",
+  "Add personalisation, saved goals, and richer account insights for a more complete banking experience.",
 ];
 
 export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Hackathon MVP"
+        eyebrow="BNZ banking experience"
         title="Financial clarity that feels immediate"
-        description="BusyBee starts with pre-loaded transactions, quick behavioral insights, and savings nudges. This base app is wired for Bedrock-backed APIs and ready to evolve into a fuller banking demo."
+        description="BusyBee brings together recent activity, practical savings ideas, and a clear view of progress so you can make more confident decisions."
         actions={
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link href="/transactions" className={buttonVariants({ className: "px-5 py-3" })}>
-              Explore transactions
+              View transactions
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <Link href="/insights" className={buttonVariants({ variant: "secondary", className: "px-5 py-3" })}>
-              Review insights
+              Explore insights
             </Link>
           </div>
         }
@@ -82,16 +82,16 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <Badge className="w-fit">AI-ready feed</Badge>
-            <CardTitle className="mt-3">Top emerging insights</CardTitle>
+            <Badge className="w-fit">Latest insights</Badge>
+            <CardTitle className="mt-3">What stands out right now</CardTitle>
             <CardDescription>
-              These are seeded from mock data today and can be replaced by Bedrock-generated summaries from the analyze API route.
+              These observations are seeded today, and they can later be replaced by richer summaries from your connected account data.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {quickInsights.map((insight) => (
               <div key={insight.title} className="rounded-2xl bg-muted p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <BrainCircuit className="h-4 w-4" />
                   {insight.title}
                 </div>
@@ -105,13 +105,13 @@ export default function DashboardPage() {
       <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Recent transactions</CardTitle>
-            <CardDescription>Mock data gives the demo immediate depth before bank integrations are available.</CardDescription>
+            <CardTitle>Recent activity</CardTitle>
+            <CardDescription>A clear snapshot of recent movement while live banking integrations are still being introduced.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {transactions.slice(0, 5).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between rounded-2xl border border-border/70 bg-white/70 p-4">
+                <div key={transaction.id} className="flex items-center justify-between rounded-2xl border border-border/70 bg-accent/10 p-4">
                   <div>
                     <p className="font-medium">{transaction.merchant}</p>
                     <p className="text-sm text-muted-foreground">
@@ -130,13 +130,13 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Starter roadmap</CardTitle>
-            <CardDescription>What this baseline intentionally leaves open for the next iteration.</CardDescription>
+            <CardTitle>Product roadmap</CardTitle>
+            <CardDescription>The next steps that would turn this experience into a fuller, more personalised banking product.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {roadmap.map((item, index) => (
               <div key={item} className="flex gap-3 rounded-2xl bg-muted p-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
                   {index + 1}
                 </div>
                 <p className="text-sm text-muted-foreground">{item}</p>
