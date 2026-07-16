@@ -1,147 +1,94 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BrainCircuit, Leaf, PiggyBank, Wallet } from "lucide-react";
-import { DashboardCharts } from "@/components/dashboard-charts";
-import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { GoalForecastChart } from "@/components/goal-forecast-chart";
+import { PageBackButton } from "@/components/page-back-button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { monthlySpending, quickInsights, transactions } from "@/lib/mock-data";
-
-const metrics = [
-  {
-    label: "Monthly spend",
-    value: "$3,842",
-    note: "Up 6.4% against the prior month",
-    icon: Wallet,
-  },
-  {
-    label: "Automated savings",
-    value: "$540",
-    note: "72% of your August target reached",
-    icon: PiggyBank,
-  },
-  {
-    label: "Lower-impact purchases",
-    value: "64%",
-    note: "Four more choices aligned with your goals",
-    icon: Leaf,
-  },
-];
-
-const roadmap = [
-  "Connect live transaction data through Open Banking or a secure file import flow.",
-  "Replace seeded recommendations with richer account-linked guidance once live data access is available.",
-  "Add personalisation, saved goals, and richer account insights for a more complete banking experience.",
-];
+import type { PlanResponse, WellbeingDashboardResponse } from "@/lib/wellbeing-types";
 
 export default function DashboardPage() {
+  const [data, setData] = useState<WellbeingDashboardResponse | null>(null);
+  const [savedPlan, setSavedPlan] = useState<PlanResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const response = await fetch("/api/wellbeing/dashboard", { cache: "no-store" });
+      const payload = (await response.json()) as WellbeingDashboardResponse;
+      setData(payload);
+
+      const planRaw = localStorage.getItem("wellbeing-plan");
+      if (planRaw) {
+        setSavedPlan(JSON.parse(planRaw) as PlanResponse);
+      }
+
+      setLoading(false);
+    }
+
+    load();
+  }, []);
+
+  const hasForecast = Boolean(savedPlan?.forecast?.length);
+
+  const topThree = useMemo(() => (data?.suggestions ?? []).slice(0, 3), [data?.suggestions]);
+
   return (
-    <div className="space-y-8">
-      <PageHeader
-        eyebrow="BNZ banking experience"
-        title="Financial clarity that feels immediate"
-        description="BusyBee brings together recent activity, practical savings ideas, and a clear view of progress so you can make more confident decisions."
-        actions={
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/transactions" className={buttonVariants({ className: "px-5 py-3" })}>
-              View transactions
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-            <Link href="/insights" className={buttonVariants({ variant: "secondary", className: "px-5 py-3" })}>
-              Explore insights
-            </Link>
-          </div>
-        }
-      />
+    <div className="space-y-16 pb-10">
+      <PageBackButton mode="static" />
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
-
-          return (
-            <Card key={metric.label}>
-              <CardHeader className="flex flex-row items-start justify-between space-y-0">
-                <div>
-                  <CardDescription>{metric.label}</CardDescription>
-                  <CardTitle className="mt-3 text-3xl">{metric.value}</CardTitle>
-                </div>
-                <div className="rounded-full bg-secondary p-3 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{metric.note}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <section className="space-y-4 pt-1">
+        <h1 className="text-5xl font-semibold tracking-tight text-[#0C2F59]">BNZ Financial Wellbeing</h1>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-        <DashboardCharts monthlySpending={monthlySpending} />
-
-        <Card>
-          <CardHeader>
-            <Badge className="w-fit">Latest insights</Badge>
-            <CardTitle className="mt-3">What stands out right now</CardTitle>
-            <CardDescription>
-              These observations are seeded today, and they can later be replaced by richer summaries from your connected account data.
-            </CardDescription>
+      <section className="grid gap-10 lg:grid-cols-2">
+        <Card className="min-h-[430px]">
+          <CardHeader className="space-y-5">
+            <CardTitle className="text-3xl">AI Suggestions</CardTitle>
+            <CardDescription className="text-base">{data?.suggestionsHeadline ?? "Loading suggested savings opportunities..."}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {quickInsights.map((insight) => (
-              <div key={insight.title} className="rounded-2xl bg-muted p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <BrainCircuit className="h-4 w-4" />
-                  {insight.title}
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">{insight.summary}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent activity</CardTitle>
-            <CardDescription>A clear snapshot of recent movement while live banking integrations are still being introduced.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {transactions.slice(0, 5).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between rounded-2xl border border-border/70 bg-accent/10 p-4">
-                  <div>
-                    <p className="font-medium">{transaction.merchant}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {transaction.category} • {transaction.date}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-foreground">${transaction.amount.toFixed(2)}</p>
-                    <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">{transaction.type}</p>
-                  </div>
+          <CardContent className="space-y-6">
+            {loading && <p className="text-[#0C2F59]/70">Loading...</p>}
+            {!loading &&
+              topThree.map((item) => (
+                <div key={item.id} className="space-y-1">
+                  <p className="text-2xl font-semibold text-[#0C2F59]">{item.title}</p>
+                  <p className="text-base text-[#0C2F59]/80">Based on {item.reason.toLowerCase()}</p>
                 </div>
               ))}
-            </div>
+
+            <Link href="/suggestions" className="block pt-4 text-2xl text-[#0C2F59] underline-offset-4 hover:underline">
+              View more suggestions...
+            </Link>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Product roadmap</CardTitle>
-            <CardDescription>The next steps that would turn this experience into a fuller, more personalised banking product.</CardDescription>
+        <Card className="min-h-[430px]">
+          <CardHeader className="space-y-5">
+            <CardTitle className="text-3xl">Forecast</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {roadmap.map((item, index) => (
-              <div key={item} className="flex gap-3 rounded-2xl bg-muted p-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
-                  {index + 1}
-                </div>
-                <p className="text-sm text-muted-foreground">{item}</p>
+          <CardContent className="space-y-6">
+            {!hasForecast && (
+              <div className="space-y-6 rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-6">
+                <p className="text-2xl font-medium text-[#0C2F59]">{data?.hero.title}</p>
+                <p className="text-base text-[#0C2F59]/80">{data?.hero.subtitle}</p>
+                <Link href="/goals-setup">
+                  <Button>{data?.hero.ctaLabel ?? "Start questionnaire"}</Button>
+                </Link>
               </div>
-            ))}
+            )}
+
+            {hasForecast && savedPlan && (
+              <div className="space-y-4">
+                <GoalForecastChart data={savedPlan.forecast} />
+                <p className="text-4xl font-semibold text-[#0C2F59]">${savedPlan.projectedBalanceAfterOneYear.toFixed(0)}</p>
+                <p className="text-base text-[#0C2F59]/80">Projected balance in one year using BNZ savings account at {(savedPlan.annualRate * 100).toFixed(1)}% p.a.</p>
+                <Link href="/goals-setup">
+                  <Button variant="secondary">Adjust questionnaire</Button>
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

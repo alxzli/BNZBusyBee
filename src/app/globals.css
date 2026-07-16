@@ -4,22 +4,22 @@
 
 :root {
   --background: 210 25% 97%;
-  --foreground: 222 47% 11%;
+  --foreground: 211 77% 20%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 211 77% 20%;
   --border: 214 32% 91%;
   --input: 214 32% 91%;
-  --primary: 221 67% 29%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 16% 94%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 210 20% 96%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 221 67% 29%;
-  --accent-foreground: 210 40% 98%;
+  --primary: 200 100% 37%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 198 52% 93%;
+  --secondary-foreground: 211 77% 20%;
+  --muted: 198 52% 93%;
+  --muted-foreground: 211 77% 20%;
+  --accent: 200 100% 37%;
+  --accent-foreground: 0 0% 100%;
   --success: 142 72% 36%;
   --success-foreground: 210 40% 98%;
-  --radius: 0.9rem;
+  --radius: 0.5rem;
 }
 
 * {
@@ -34,6 +34,7 @@ body {
   @apply bg-background text-foreground antialiased;
   background-color: hsl(210 25% 97%);
   background-image: linear-gradient(180deg, hsl(210 25% 98%) 0%, hsl(210 25% 97%) 100%);
+  color: #0c2f59;
   min-height: 100vh;
 }
 
@@ -58,19 +59,19 @@ a {
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   }
   .bg-muted {
-    background-color: hsl(210 20% 96%) !important;
+    background-color: #e5f2f8 !important;
   }
 
   .bg-muted\/50 {
-    background-color: hsl(210 20% 96% / 0.9) !important;
+    background-color: rgb(229 242 248 / 0.9) !important;
   }
 
   .bg-muted\/40 {
-    background-color: hsl(210 20% 96% / 0.8) !important;
+    background-color: rgb(229 242 248 / 0.8) !important;
   }
 
   .text-muted-foreground {
-    color: hsl(215 16% 47%) !important;
+    color: rgb(12 47 89 / 0.8) !important;
   }
 
   .border-border {
