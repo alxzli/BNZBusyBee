@@ -1,3 +1,21 @@
+export type Transaction = {
+  id: string;
+  date: string;
+  merchant: string;
+  category: string;
+  amount: number;
+  type: "debit" | "credit";
+  account: string;
+};
+
+export type SavingsGoal = {
+  name: string;
+  current: number;
+  target: number;
+  dueInMonths: number;
+  monthlyContribution: number;
+};
+
 export type SavingsSuggestionType = "subscription" | "dining" | "fee" | "idle_cash";
 
 export type SuggestionEvidence = {

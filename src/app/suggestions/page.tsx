@@ -13,7 +13,11 @@ export default function SuggestionsPage() {
 
   useEffect(() => {
     async function load() {
-      const response = await fetch("/api/wellbeing/suggestions", { cache: "no-store" });
+      const userId = localStorage.getItem("wellbeing-user") || "alex";
+      const response = await fetch("/api/wellbeing/suggestions", {
+        cache: "no-store",
+        headers: { "x-user-id": userId },
+      });
       const payload = (await response.json()) as WellbeingSuggestionsResponse;
       setData(payload);
       setLoading(false);

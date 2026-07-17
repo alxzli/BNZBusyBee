@@ -1,20 +1,4 @@
-export type Transaction = {
-  id: string;
-  date: string;
-  merchant: string;
-  category: string;
-  amount: number;
-  type: "debit" | "credit";
-  account: string;
-};
-
-export type SavingsGoal = {
-  name: string;
-  current: number;
-  target: number;
-  dueInMonths: number;
-  monthlyContribution: number;
-};
+import type { SavingsGoal, Transaction } from "@/lib/wellbeing-types";
 
 export const transactions: Transaction[] = [
   { id: "txn_001", date: "2026-07-01", merchant: "Countdown Metro", category: "Groceries", amount: 124.36, type: "debit", account: "Everyday" },

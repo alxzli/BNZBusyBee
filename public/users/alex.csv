@@ -1,0 +1,11 @@
+record_type,date,merchant,category,amount,type,account,goal_name,current,target,due_in_months,monthly_contribution
+transaction,2026-07-01,Countdown Metro,Groceries,124.36,debit,Everyday,,,,,
+transaction,2026-07-02,BNZ Salary,Income,3120,credit,Everyday,,,,,
+transaction,2026-07-03,Netflix,Subscriptions,24.99,debit,Everyday,,,,,
+transaction,2026-07-04,Little Bird Organics,Dining,42.1,debit,Everyday,,,,,
+transaction,2026-07-05,Trade Me,Shopping,85.4,debit,Everyday,,,,,
+transaction,2026-07-06,Auckland Council,Bills,96,debit,Everyday,,,,,
+transaction,2026-07-07,Bean There Cafe,Dining,14.8,debit,Everyday,,,,,
+transaction,2026-07-08,Pocket Transfer,Savings,180,debit,Savings,,,,,
+goal,,,,,,,,Emergency buffer,3200,5000,6,300
+goal,,,,,,,,Summer travel,1450,2500,5,210

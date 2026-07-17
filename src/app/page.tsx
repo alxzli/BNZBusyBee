@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import LoginPage from "@/app/login/page";
 import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,24 @@ export default function DashboardPage() {
   const [data, setData] = useState<WellbeingDashboardResponse | null>(null);
   const [savedPlan, setSavedPlan] = useState<PlanResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("wellbeing-user");
+    if (!storedUser) {
+      setAuthState("unauthenticated");
+      setLoading(false);
+      return;
+    }
+
+    setAuthState("authenticated");
+
     async function load() {
-      const response = await fetch("/api/wellbeing/dashboard", { cache: "no-store" });
+      const userId = storedUser;
+      const response = await fetch("/api/wellbeing/dashboard", {
+        cache: "no-store",
+        headers: { "x-user-id": userId ?? "alex" },
+      });
       const payload = (await response.json()) as WellbeingDashboardResponse;
       setData(payload);
 
@@ -33,6 +48,14 @@ export default function DashboardPage() {
   const hasForecast = Boolean(savedPlan?.forecast?.length);
 
   const topThree = useMemo(() => (data?.suggestions ?? []).slice(0, 3), [data?.suggestions]);
+
+  if (authState === "unauthenticated") {
+    return <LoginPage />;
+  }
+
+  if (authState === "loading") {
+    return <p className="text-[#0C2F59]/70">Loading...</p>;
+  }
 
   return (
     <div className="space-y-16 pb-10">

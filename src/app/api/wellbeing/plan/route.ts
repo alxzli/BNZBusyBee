@@ -4,10 +4,11 @@ import type { PlanRequest } from "@/lib/wellbeing-types";
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as PlanRequest;
+  const userId = request.headers.get("x-user-id") || "alex";
 
   if (!body.goalType || body.targetAmount <= 0 || body.horizonYears <= 0 || body.currentSavings < 0 || body.weeklyContribution < 0) {
     return NextResponse.json({ error: "Invalid questionnaire payload" }, { status: 400 });
   }
 
-  return NextResponse.json(buildPlanFromQuestionnaire(body));
+  return NextResponse.json(buildPlanFromQuestionnaire(body, userId));
 }

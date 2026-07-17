@@ -66,10 +66,12 @@ export default function GoalsSetupPage() {
     };
 
     setLoading(true);
+    const userId = localStorage.getItem("wellbeing-user") || "alex";
     const response = await fetch("/api/wellbeing/plan", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-user-id": userId,
       },
       body: JSON.stringify(payload),
     });

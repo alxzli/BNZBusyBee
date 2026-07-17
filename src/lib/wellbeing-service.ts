@@ -1,4 +1,4 @@
-import { transactions } from "@/lib/mock-data";
+import { loadUserProfileFinancialData } from "@/lib/user-profiles";
 import type {
   ForecastPoint,
   PlanRequest,
@@ -24,7 +24,8 @@ function annualizeFromWeekly(weekly: number) {
   return weekly * 52;
 }
 
-function detectSuggestionSet(): SavingsSuggestion[] {
+function detectSuggestionSet(userId = "alex"): SavingsSuggestion[] {
+  const { transactions } = loadUserProfileFinancialData(userId);
   const subscriptions = transactions.filter((item) => item.merchant === "Netflix" || item.category === "Subscriptions");
   const dining = transactions.filter((item) => item.category === "Dining");
   const feeLike = transactions.filter((item) => item.merchant === "Trade Me");
@@ -130,8 +131,8 @@ function buildForecast(startingBalance: number, weeklyContribution: number, annu
   return points;
 }
 
-export function getWellbeingDashboardData(): WellbeingDashboardResponse {
-  const suggestions = detectSuggestionSet().slice(0, 3);
+export function getWellbeingDashboardData(userId = "alex"): WellbeingDashboardResponse {
+  const suggestions = detectSuggestionSet(userId).slice(0, 3);
   const monthlyTotal = toCurrency(suggestions.reduce((sum, item) => sum + item.monthlySavings, 0));
 
   return {
@@ -149,8 +150,8 @@ export function getWellbeingDashboardData(): WellbeingDashboardResponse {
   };
 }
 
-export function getWellbeingSuggestionsData(): WellbeingSuggestionsResponse {
-  const suggestions = detectSuggestionSet();
+export function getWellbeingSuggestionsData(userId = "alex"): WellbeingSuggestionsResponse {
+  const suggestions = detectSuggestionSet(userId);
   return {
     generatedAt: new Date().toISOString(),
     aiStatus: "mock",
@@ -159,8 +160,8 @@ export function getWellbeingSuggestionsData(): WellbeingSuggestionsResponse {
   };
 }
 
-export function buildPlanFromQuestionnaire(payload: PlanRequest): PlanResponse {
-  const suggestions = detectSuggestionSet();
+export function buildPlanFromQuestionnaire(payload: PlanRequest, userId = "alex"): PlanResponse {
+  const suggestions = detectSuggestionSet(userId);
   const annualSavingsFromSuggestions = toCurrency(suggestions.reduce((sum, item) => sum + item.annualSavings, 0));
   const totalContributionsYear = toCurrency(annualizeFromWeekly(payload.weeklyContribution));
   const forecast = buildForecast(payload.currentSavings, payload.weeklyContribution, annualSavingsFromSuggestions);

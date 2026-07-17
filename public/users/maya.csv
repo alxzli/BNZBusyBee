@@ -1,0 +1,11 @@
+record_type,date,merchant,category,amount,type,account,goal_name,current,target,due_in_months,monthly_contribution
+transaction,2026-07-01,Farro Fresh,Groceries,188.4,debit,Everyday,,,,,
+transaction,2026-07-02,BNZ Salary,Income,4100,credit,Everyday,,,,,
+transaction,2026-07-03,Spotify,Subscriptions,12.99,debit,Everyday,,,,,
+transaction,2026-07-04,The Coffee Club,Dining,18.5,debit,Everyday,,,,,
+transaction,2026-07-05,Air New Zealand,Travel,260,debit,Everyday,,,,,
+transaction,2026-07-06,Genesis,Bills,132,debit,Everyday,,,,,
+transaction,2026-07-07,Warehouse,Shopping,154.8,debit,Everyday,,,,,
+transaction,2026-07-08,Pocket Transfer,Savings,350,debit,Savings,,,,,
+goal,,,,,,,,Travel fund,2400,6000,8,450
+goal,,,,,,,,Emergency buffer,1800,4000,7,260

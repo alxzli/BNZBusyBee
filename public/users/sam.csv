@@ -1,0 +1,11 @@
+record_type,date,merchant,category,amount,type,account,goal_name,current,target,due_in_months,monthly_contribution
+transaction,2026-07-01,New World,Groceries,98.2,debit,Everyday,,,,,
+transaction,2026-07-02,BNZ Salary,Income,2860,credit,Everyday,,,,,
+transaction,2026-07-03,Watercare,Bills,74.5,debit,Everyday,,,,,
+transaction,2026-07-04,Trainline,Transport,22,debit,Everyday,,,,,
+transaction,2026-07-05,The Library,Subscriptions,9.99,debit,Everyday,,,,,
+transaction,2026-07-06,AA Insurance,Bills,118,debit,Everyday,,,,,
+transaction,2026-07-07,Pocket Transfer,Savings,220,debit,Savings,,,,,
+transaction,2026-07-08,Countdown Metro,Groceries,67.8,debit,Everyday,,,,,
+goal,,,,,,,,Emergency buffer,4100,6000,9,180
+goal,,,,,,,,Car maintenance,900,2200,5,260
