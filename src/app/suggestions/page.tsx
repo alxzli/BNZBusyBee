@@ -5,26 +5,55 @@ import Link from "next/link";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
 import type { SavingsSuggestion, WellbeingSuggestionsResponse } from "@/lib/wellbeing-types";
 
 export default function SuggestionsPage() {
   const [data, setData] = useState<WellbeingSuggestionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeUserId, setActiveUserId] = useState(getStoredUserId());
 
   useEffect(() => {
+    const syncUser = () => setActiveUserId(getStoredUserId());
+
+    setActiveUserId(ensureStoredUserId());
+    window.addEventListener("wellbeing-user-changed", syncUser);
+    window.addEventListener("storage", syncUser);
+    return () => {
+      window.removeEventListener("wellbeing-user-changed", syncUser);
+      window.removeEventListener("storage", syncUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
     async function load() {
-      const userId = localStorage.getItem("wellbeing-user") || "alex";
+      setLoading(true);
       const response = await fetch("/api/wellbeing/suggestions", {
         cache: "no-store",
-        headers: { "x-user-id": userId },
+        headers: { "x-user-id": activeUserId },
       });
       const payload = (await response.json()) as WellbeingSuggestionsResponse;
+
+      if (cancelled) {
+        return;
+      }
+
       setData(payload);
       setLoading(false);
     }
 
-    load();
-  }, []);
+    load().catch(() => {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeUserId]);
 
   const suggestions: SavingsSuggestion[] = data?.suggestions ?? [];
 

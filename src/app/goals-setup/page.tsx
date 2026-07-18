@@ -6,6 +6,7 @@ import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getStoredUserId } from "@/lib/wellbeing-user";
 import type { PlanRequest, PlanResponse } from "@/lib/wellbeing-types";
 
 type FormState = {
@@ -66,7 +67,7 @@ export default function GoalsSetupPage() {
     };
 
     setLoading(true);
-    const userId = localStorage.getItem("wellbeing-user") || "alex";
+    const userId = getStoredUserId();
     const response = await fetch("/api/wellbeing/plan", {
       method: "POST",
       headers: {
