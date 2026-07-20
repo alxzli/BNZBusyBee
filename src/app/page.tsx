@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
 import type { PlanResponse, WellbeingDashboardResponse } from "@/lib/wellbeing-types";
 
+const WALKTHROUGH_REOPEN_EVENT = "bnzbusybee:walkthrough-reopen";
+
 export default function DashboardPage() {
   const [data, setData] = useState<WellbeingDashboardResponse | null>(null);
   const [savedPlan, setSavedPlan] = useState<PlanResponse | null>(null);
@@ -64,9 +66,13 @@ export default function DashboardPage() {
 
   const topThree = useMemo(() => (data?.suggestions ?? []).slice(0, 3), [data?.suggestions]);
 
+  function reopenWalkthrough() {
+    window.dispatchEvent(new Event(WALKTHROUGH_REOPEN_EVENT));
+  }
+
   return (
     <div className="space-y-12 pb-6">
-      <PageBackButton mode="static" />
+      <PageBackButton mode="static" onClick={reopenWalkthrough} />
 
       <section className="space-y-3 pt-0.5">
         <h1 className="text-5xl font-semibold tracking-tight text-[#0C2F59]">BNZ Financial Wellbeing</h1>
