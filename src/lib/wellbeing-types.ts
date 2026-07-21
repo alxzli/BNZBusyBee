@@ -37,6 +37,7 @@ export type SavingsSuggestion = {
 };
 
 export type ForecastPoint = {
+  date: string;
   month: string;
   projectedBalance: number;
   contributed: number;
@@ -75,6 +76,8 @@ export type PlanRequest = {
 export type PlanResponse = {
   generatedAt: string;
   aiStatus: "mock";
+  goalType: string;
+  questionnaireAnswers: PlanRequest;
   annualRate: number;
   estimatedOneYearGain: number;
   totalContributionsYear: number;

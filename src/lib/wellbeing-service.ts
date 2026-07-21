@@ -105,6 +105,11 @@ function detectSuggestionSet(userId = "alex"): SavingsSuggestion[] {
   return suggestions.sort((a, b) => b.annualSavings - a.annualSavings);
 }
 
+function getDefaultGoalName(userId = "alex") {
+  const { savingsGoals } = loadUserProfileFinancialData(userId);
+  return savingsGoals[0]?.name || "a savings goal";
+}
+
 function buildForecast(startingBalance: number, weeklyContribution: number, annualSuggestionSavings: number, annualRate = BNZ_SAVINGS_ANNUAL_RATE): ForecastPoint[] {
   const monthlyRate = getMonthlyRate(annualRate);
   const monthlyContribution = (weeklyContribution * 52 + annualSuggestionSavings) / 12;
@@ -112,6 +117,7 @@ function buildForecast(startingBalance: number, weeklyContribution: number, annu
   const points: ForecastPoint[] = [];
   let balance = startingBalance;
   let contributionTotal = 0;
+  const startDate = new Date();
 
   for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
     contributionTotal += monthlyContribution;
@@ -120,7 +126,10 @@ function buildForecast(startingBalance: number, weeklyContribution: number, annu
     const interest = balance * monthlyRate;
     balance += interest;
 
+    const pointDate = new Date(startDate.getFullYear(), startDate.getMonth() + monthIndex, startDate.getDate());
+
     points.push({
+      date: `${pointDate.getFullYear()}-${String(pointDate.getMonth() + 1).padStart(2, "0")}-${String(pointDate.getDate()).padStart(2, "0")}`,
       month: monthNames[monthIndex],
       projectedBalance: toCurrency(balance),
       contributed: toCurrency(contributionTotal),
@@ -269,13 +278,22 @@ export function buildPlanFromQuestionnaire(payload: PlanRequest, userId = "alex"
   const forecast = buildForecast(payload.currentSavings, resolvedWeeklyContribution, annualSavingsFromSuggestions);
   const projectedBalanceAfterOneYear = forecast[forecast.length - 1]?.projectedBalance ?? payload.currentSavings;
 
+  const goalLabel = payload.goalType || getDefaultGoalName(userId);
   const summary = payload.horizonYears == null || payload.horizonYears <= 0
-    ? `Based on your current savings and the information you shared, your ${payload.goalType.toLowerCase()} goal would take about ${resolvedHorizonYears.toFixed(1)} years to reach if you save $${resolvedWeeklyContribution}/week.`
+    ? `Based on your current savings and the information you shared, your ${goalLabel.toLowerCase()} goal would take about ${resolvedHorizonYears.toFixed(1)} years to reach if you save $${resolvedWeeklyContribution}/week.`
     : `If you redirect around $${toCurrency(annualSavingsFromSuggestions / 52)} each week from suggestions and save $${resolvedWeeklyContribution}/week, you could reach about $${projectedBalanceAfterOneYear} in one year.`;
 
   return {
     generatedAt: new Date().toISOString(),
     aiStatus: "mock",
+    goalType: payload.goalType,
+    questionnaireAnswers: {
+      goalType: payload.goalType,
+      targetAmount: payload.targetAmount,
+      horizonYears: payload.horizonYears,
+      currentSavings: payload.currentSavings,
+      weeklyContribution: payload.weeklyContribution,
+    },
     annualRate: BNZ_SAVINGS_ANNUAL_RATE,
     estimatedOneYearGain: toCurrency(projectedBalanceAfterOneYear - payload.currentSavings),
     totalContributionsYear,
@@ -284,7 +302,7 @@ export function buildPlanFromQuestionnaire(payload: PlanRequest, userId = "alex"
     resolvedHorizonYears,
     resolvedWeeklyContribution,
     shortSummary: summary,
-    nextStep: `Focus on ${payload.goalType.toLowerCase()} with a ${resolvedHorizonYears.toFixed(1)}-year horizon and review progress monthly.`,
+    nextStep: `Focus on ${goalLabel.toLowerCase()} with a ${resolvedHorizonYears.toFixed(1)}-year horizon and review progress monthly.`,
     forecast,
   };
 }
