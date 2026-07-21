@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildFormStateFromPlan } from "@/lib/questionnaire-form";
+import { getPlanStorageKey } from "@/lib/user-storage";
 import type { PlanRequest, PlanResponse } from "@/lib/wellbeing-types";
 
 type FormState = {
@@ -37,6 +39,31 @@ export default function GoalsSetupPage() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [result, setResult] = useState<PlanResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isAdjustingExistingPlan, setIsAdjustingExistingPlan] = useState(false);
+
+  useEffect(() => {
+    const userId = localStorage.getItem("wellbeing-user") || "alex";
+    const savedPlanRaw = localStorage.getItem(getPlanStorageKey(userId));
+    if (!savedPlanRaw) {
+      return;
+    }
+
+    try {
+      const savedPlan = JSON.parse(savedPlanRaw) as PlanResponse;
+      const answers = savedPlan?.questionnaireAnswers;
+      setForm(buildFormStateFromPlan({
+        goalType: answers?.goalType ?? savedPlan?.goalType ?? "",
+        targetAmount: answers?.targetAmount ?? null,
+        horizonYears: answers?.horizonYears ?? null,
+        currentSavings: answers?.currentSavings ?? null,
+        weeklyContribution: answers?.weeklyContribution ?? null,
+      }));
+      setIsAdjustingExistingPlan(Boolean(answers || savedPlan?.goalType));
+    } catch {
+      setForm(initialForm);
+      setIsAdjustingExistingPlan(false);
+    }
+  }, []);
 
   const currentStep = steps[step];
   const currentValue = form[currentStep.key];
@@ -92,7 +119,7 @@ export default function GoalsSetupPage() {
     });
     const plan = (await response.json()) as PlanResponse;
     setResult(plan);
-    localStorage.setItem("wellbeing-plan", JSON.stringify(plan));
+    localStorage.setItem(getPlanStorageKey(userId), JSON.stringify(plan));
     setLoading(false);
   }
 
@@ -147,7 +174,11 @@ export default function GoalsSetupPage() {
 
       <section className="space-y-3">
         <h1 className="text-5xl font-semibold tracking-tight text-[#0C2F59]">5-minute goal questionnaire</h1>
-        <p className="max-w-3xl text-lg text-[#0C2F59]/80">Answer five simple questions and we will prepare a BNZ savings account yearly projection.</p>
+        <p className="max-w-3xl text-lg text-[#0C2F59]/80">
+          {isAdjustingExistingPlan
+            ? "Update your current answers and we’ll rebuild your savings forecast."
+            : "Answer five simple questions and we will prepare a BNZ savings account yearly projection."}
+        </p>
       </section>
 
       <Card className="max-w-3xl">
@@ -155,6 +186,9 @@ export default function GoalsSetupPage() {
           <p className="text-sm uppercase tracking-[0.18em] text-[#0C2F59]/70">
             Question {step + 1} of {steps.length}
           </p>
+          {isAdjustingExistingPlan && (
+            <p className="text-sm text-[#0C2F59]/70">You’re updating your current answers below.</p>
+          )}
           <CardTitle className="text-3xl">{currentStep.title}</CardTitle>
           <input
             value={currentValue}
