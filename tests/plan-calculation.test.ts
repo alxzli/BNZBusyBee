@@ -20,9 +20,9 @@ test("derives missing horizon and weekly contribution from the other inputs", ()
   assert.ok(result.resolvedWeeklyContribution > 0);
 });
 
-test("uses the current date as the first forecast point", async () => {
+test("uses the current date as the first forecast point", () => {
   const today = new Date();
-  const result = await buildPlanFromQuestionnaire(
+  const result = buildPlanFromQuestionnaire(
     {
       goalType: "House deposit",
       targetAmount: 50000,

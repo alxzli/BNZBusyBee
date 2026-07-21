@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
@@ -134,7 +133,7 @@ export default function GoalsSetupPage() {
   }
 
   if (result) {
-    const aiStatusLabel = result.aiStatus === "live" ? "AI narrative live" : result.aiStatus === "fallback" ? "AI narrative fallback" : "Mock";
+    const aiStatusLabel = "Mock";
 
     return (
       <div className="space-y-10">

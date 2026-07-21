@@ -1,7 +1,5 @@
-import { generateBedrockJson, getConfiguredModelId } from "@/lib/bedrock";
 import { loadUserProfileFinancialData } from "@/lib/user-profiles";
 import type {
-  AiMetadata,
   ForecastPoint,
   PlanRequest,
   PlanResponse,
@@ -14,23 +12,6 @@ const BNZ_SAVINGS_ANNUAL_RATE = 0.045;
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-type SuggestionCopyPatch = {
-  id: string;
-  title: string;
-  reason: string;
-  actionLabel: string;
-};
-
-type SuggestionCopyResponse = {
-  suggestionsHeadline: string;
-  suggestions: SuggestionCopyPatch[];
-};
-
-type PlanNarrativeResponse = {
-  shortSummary: string;
-  nextStep: string;
-};
-
 function toCurrency(value: number) {
   return Math.round(value * 100) / 100;
 }
@@ -41,102 +22,6 @@ function getMonthlyRate(annualRate: number) {
 
 function annualizeFromWeekly(weekly: number) {
   return weekly * 52;
-}
-
-function createAiMetadata(fallbackReason?: string): AiMetadata {
-  return {
-    modelId: getConfiguredModelId(),
-    fallbackReason,
-  };
-}
-
-function sanitizeSingleLine(value: string) {
-  return value.replace(/\s+/g, " ").trim();
-}
-
-function sanitizeParagraph(value: string) {
-  return value.replace(/\s+/g, " ").trim();
-}
-
-async function generateAiSuggestionCopy(input: {
-  userId: string;
-  headline: string;
-  suggestions: SavingsSuggestion[];
-}) {
-  const promptPayload = {
-    userProfileId: input.userId,
-    currentHeadline: input.headline,
-    suggestions: input.suggestions.map((item) => ({
-      id: item.id,
-      title: item.title,
-      reason: item.reason,
-      actionLabel: item.actionLabel,
-      monthlySavings: item.monthlySavings,
-      annualSavings: item.annualSavings,
-      confidence: item.confidence,
-      evidence: item.evidence,
-    })),
-  };
-
-  return generateBedrockJson<SuggestionCopyResponse>({
-    systemPrompt:
-      "You are an assistant for BNZ financial wellbeing. Return only valid JSON. Keep language practical, clear, and non-judgmental. Do not provide regulated financial advice.",
-    userPrompt: [
-      "Rewrite this suggestions content for clarity and motivation using NZ English.",
-      "Return JSON with this exact schema:",
-      "{\"suggestionsHeadline\": string, \"suggestions\": [{\"id\": string, \"title\": string, \"reason\": string, \"actionLabel\": string}]}",
-      "Keep each title under 55 characters and each reason under 170 characters.",
-      "Preserve the same ids and count as input.",
-      JSON.stringify(promptPayload),
-    ].join("\n"),
-  });
-}
-
-function isValidSuggestionCopyResponse(value: SuggestionCopyResponse | null, expectedIds: string[]) {
-  if (!value || !Array.isArray(value.suggestions) || typeof value.suggestionsHeadline !== "string") {
-    return false;
-  }
-
-  const returnedIds = value.suggestions.map((item) => item.id).sort();
-  const sortedExpected = [...expectedIds].sort();
-
-  if (returnedIds.length !== sortedExpected.length) {
-    return false;
-  }
-
-  return returnedIds.every((id, index) => id === sortedExpected[index]);
-}
-
-async function generateAiPlanNarrative(input: {
-  goalType: string;
-  targetAmount: number;
-  currentSavings: number;
-  resolvedHorizonYears: number;
-  resolvedWeeklyContribution: number;
-  annualSavingsFromSuggestions: number;
-  projectedBalanceAfterOneYear: number;
-}) {
-  return generateBedrockJson<PlanNarrativeResponse>({
-    systemPrompt:
-      "You are an assistant for BNZ financial wellbeing. Return only valid JSON. Keep language educational and supportive. Do not provide regulated investment advice.",
-    userPrompt: [
-      "Create a personalized summary and next step for a savings plan.",
-      "Return JSON with this exact schema:",
-      "{\"shortSummary\": string, \"nextStep\": string}",
-      "shortSummary max 240 characters, nextStep max 180 characters.",
-      JSON.stringify(input),
-    ].join("\n"),
-  });
-}
-
-function isValidPlanNarrativeResponse(value: PlanNarrativeResponse | null) {
-  return Boolean(
-    value
-      && typeof value.shortSummary === "string"
-      && value.shortSummary.trim().length > 0
-      && typeof value.nextStep === "string"
-      && value.nextStep.trim().length > 0,
-  );
 }
 
 function detectSuggestionSet(userId = "alex"): SavingsSuggestion[] {
@@ -356,46 +241,16 @@ export function resolveGoalInputs(payload: PlanRequest, annualSuggestionSavings:
   };
 }
 
-export async function getWellbeingDashboardData(userId = "alex"): Promise<WellbeingDashboardResponse> {
+export function getWellbeingDashboardData(userId = "alex"): WellbeingDashboardResponse {
   const suggestions = detectSuggestionSet(userId).slice(0, 3);
   const monthlyTotal = toCurrency(suggestions.reduce((sum, item) => sum + item.monthlySavings, 0));
-  const deterministicHeadline = `We found about $${monthlyTotal}/month you could put to work`;
-
-  const aiCopy = await generateAiSuggestionCopy({
-    userId,
-    headline: deterministicHeadline,
-    suggestions,
-  });
-
-  const canUseAiCopy = isValidSuggestionCopyResponse(aiCopy, suggestions.map((item) => item.id));
-  const aiCopyPayload = canUseAiCopy ? aiCopy : null;
-
-  const mergedSuggestions = aiCopyPayload
-    ? suggestions.map((item) => {
-      const patch = aiCopyPayload.suggestions.find((candidate) => candidate.id === item.id);
-
-      if (!patch) {
-        return item;
-      }
-
-      return {
-        ...item,
-        title: sanitizeSingleLine(patch.title) || item.title,
-        reason: sanitizeParagraph(patch.reason) || item.reason,
-        actionLabel: sanitizeSingleLine(patch.actionLabel) || item.actionLabel,
-      };
-    })
-    : suggestions;
-
-  const aiStatus = canUseAiCopy ? "live" : "fallback";
 
   return {
     generatedAt: new Date().toISOString(),
-    aiStatus,
-    aiMetadata: createAiMetadata(canUseAiCopy ? undefined : "suggestion_copy_unavailable"),
+    aiStatus: "mock",
     title: "BNZ Financial Wellbeing",
-    suggestionsHeadline: aiCopyPayload ? sanitizeSingleLine(aiCopyPayload.suggestionsHeadline) || deterministicHeadline : deterministicHeadline,
-    suggestions: mergedSuggestions,
+    suggestionsHeadline: `We found about $${monthlyTotal}/month you could put to work`,
+    suggestions,
     goalMode: "hero",
     hero: {
       title: "Set your goals and unlock your forecast",
@@ -405,47 +260,18 @@ export async function getWellbeingDashboardData(userId = "alex"): Promise<Wellbe
   };
 }
 
-export async function getWellbeingSuggestionsData(userId = "alex"): Promise<WellbeingSuggestionsResponse> {
+export function getWellbeingSuggestionsData(userId = "alex"): WellbeingSuggestionsResponse {
   const suggestions = detectSuggestionSet(userId);
-  const monthlyTotal = toCurrency(suggestions.reduce((sum, item) => sum + item.monthlySavings, 0));
-  const deterministicHeadline = `We found about $${monthlyTotal}/month you could put to work`;
-
-  const aiCopy = await generateAiSuggestionCopy({
-    userId,
-    headline: deterministicHeadline,
-    suggestions,
-  });
-
-  const canUseAiCopy = isValidSuggestionCopyResponse(aiCopy, suggestions.map((item) => item.id));
-  const aiCopyPayload = canUseAiCopy ? aiCopy : null;
-
-  const mergedSuggestions = aiCopyPayload
-    ? suggestions.map((item) => {
-      const patch = aiCopyPayload.suggestions.find((candidate) => candidate.id === item.id);
-
-      if (!patch) {
-        return item;
-      }
-
-      return {
-        ...item,
-        title: sanitizeSingleLine(patch.title) || item.title,
-        reason: sanitizeParagraph(patch.reason) || item.reason,
-        actionLabel: sanitizeSingleLine(patch.actionLabel) || item.actionLabel,
-      };
-    })
-    : suggestions;
 
   return {
     generatedAt: new Date().toISOString(),
-    aiStatus: canUseAiCopy ? "live" : "fallback",
-    aiMetadata: createAiMetadata(canUseAiCopy ? undefined : "suggestion_copy_unavailable"),
-    annualSavingsTotal: toCurrency(mergedSuggestions.reduce((sum, item) => sum + item.annualSavings, 0)),
-    suggestions: mergedSuggestions,
+    aiStatus: "mock",
+    annualSavingsTotal: toCurrency(suggestions.reduce((sum, item) => sum + item.annualSavings, 0)),
+    suggestions,
   };
 }
 
-export async function buildPlanFromQuestionnaire(payload: PlanRequest, userId = "alex"): Promise<PlanResponse> {
+export function buildPlanFromQuestionnaire(payload: PlanRequest, userId = "alex"): PlanResponse {
   const suggestions = detectSuggestionSet(userId);
   const annualSavingsFromSuggestions = toCurrency(suggestions.reduce((sum, item) => sum + item.annualSavings, 0));
   const { resolvedHorizonYears, resolvedWeeklyContribution } = resolveGoalInputs(payload, annualSavingsFromSuggestions);
@@ -454,29 +280,13 @@ export async function buildPlanFromQuestionnaire(payload: PlanRequest, userId = 
   const projectedBalanceAfterOneYear = forecast[forecast.length - 1]?.projectedBalance ?? payload.currentSavings;
 
   const goalLabel = payload.goalType || getDefaultGoalName(userId);
-  const deterministicSummary = payload.horizonYears == null || payload.horizonYears <= 0
+  const summary = payload.horizonYears == null || payload.horizonYears <= 0
     ? `Based on your current savings and the information you shared, your ${goalLabel.toLowerCase()} goal would take about ${resolvedHorizonYears.toFixed(1)} years to reach if you save $${resolvedWeeklyContribution}/week.`
     : `If you redirect around $${toCurrency(annualSavingsFromSuggestions / 52)} each week from suggestions and save $${resolvedWeeklyContribution}/week, you could reach about $${projectedBalanceAfterOneYear} in one year.`;
 
-  const deterministicNextStep = `Focus on ${goalLabel.toLowerCase()} with a ${resolvedHorizonYears.toFixed(1)}-year horizon and review progress monthly.`;
-
-  const aiNarrative = await generateAiPlanNarrative({
-    goalType: goalLabel,
-    targetAmount: payload.targetAmount,
-    currentSavings: payload.currentSavings,
-    resolvedHorizonYears,
-    resolvedWeeklyContribution,
-    annualSavingsFromSuggestions,
-    projectedBalanceAfterOneYear,
-  });
-
-  const canUseAiNarrative = isValidPlanNarrativeResponse(aiNarrative);
-  const aiNarrativePayload = canUseAiNarrative ? aiNarrative : null;
-
   return {
     generatedAt: new Date().toISOString(),
-    aiStatus: aiNarrativePayload ? "live" : "fallback",
-    aiMetadata: createAiMetadata(aiNarrativePayload ? undefined : "plan_narrative_unavailable"),
+    aiStatus: "mock",
     goalType: payload.goalType,
     questionnaireAnswers: {
       goalType: payload.goalType,
@@ -492,8 +302,8 @@ export async function buildPlanFromQuestionnaire(payload: PlanRequest, userId = 
     projectedBalanceAfterOneYear,
     resolvedHorizonYears,
     resolvedWeeklyContribution,
-    shortSummary: aiNarrativePayload ? sanitizeParagraph(aiNarrativePayload.shortSummary) : deterministicSummary,
-    nextStep: aiNarrativePayload ? sanitizeParagraph(aiNarrativePayload.nextStep) : deterministicNextStep,
+    shortSummary: summary,
+    nextStep: `Focus on ${goalLabel.toLowerCase()} with a ${resolvedHorizonYears.toFixed(1)}-year horizon and review progress monthly.`,
     forecast,
   };
 }

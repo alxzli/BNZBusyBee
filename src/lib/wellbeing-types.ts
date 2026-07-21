@@ -44,17 +44,9 @@ export type ForecastPoint = {
   interestEarned: number;
 };
 
-export type AiStatus = "live" | "fallback" | "mock";
-
-export type AiMetadata = {
-  modelId: string | null;
-  fallbackReason?: string;
-};
-
 export type WellbeingDashboardResponse = {
   generatedAt: string;
-  aiStatus: AiStatus;
-  aiMetadata?: AiMetadata;
+  aiStatus: "mock";
   title: string;
   suggestionsHeadline: string;
   suggestions: SavingsSuggestion[];
@@ -68,8 +60,7 @@ export type WellbeingDashboardResponse = {
 
 export type WellbeingSuggestionsResponse = {
   generatedAt: string;
-  aiStatus: AiStatus;
-  aiMetadata?: AiMetadata;
+  aiStatus: "mock";
   annualSavingsTotal: number;
   suggestions: SavingsSuggestion[];
 };
@@ -84,8 +75,7 @@ export type PlanRequest = {
 
 export type PlanResponse = {
   generatedAt: string;
-  aiStatus: AiStatus;
-  aiMetadata?: AiMetadata;
+  aiStatus: "mock";
   goalType: string;
   questionnaireAnswers: PlanRequest;
   annualRate: number;
