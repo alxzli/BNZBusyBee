@@ -1,7 +1,8 @@
 import "server-only";
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 
-const modelId = process.env.BEDROCK_MODEL_ID ?? "amazon.nova-lite-v1:0";
+const DEFAULT_MODEL_ID = "amazon.nova-lite-v1:0";
+const modelId = process.env.BEDROCK_MODEL_ID ?? DEFAULT_MODEL_ID;
 
 function getBedrockClient() {
   const region = process.env.AWS_REGION;
@@ -11,6 +12,21 @@ function getBedrockClient() {
   }
 
   return new BedrockRuntimeClient({ region });
+}
+
+export function getConfiguredModelId() {
+  return process.env.AWS_REGION ? modelId : null;
+}
+
+function extractJsonObject(text: string) {
+  const trimmed = text.trim();
+
+  if (trimmed.startsWith("```") && trimmed.endsWith("```")) {
+    const withoutFence = trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    return withoutFence.trim();
+  }
+
+  return trimmed;
 }
 
 export async function generateBedrockText(input: {
@@ -45,6 +61,24 @@ export async function generateBedrockText(input: {
     return text || null;
   } catch (error) {
     console.error("Bedrock invocation failed", error);
+    return null;
+  }
+}
+
+export async function generateBedrockJson<T>(input: {
+  systemPrompt: string;
+  userPrompt: string;
+}) {
+  const text = await generateBedrockText(input);
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(extractJsonObject(text)) as T;
+  } catch (error) {
+    console.error("Bedrock JSON parse failed", error);
     return null;
   }
 }

@@ -18,5 +18,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid questionnaire payload" }, { status: 400 });
   }
 
-  return NextResponse.json(buildPlanFromQuestionnaire({ ...body, targetAmount, currentSavings, horizonYears, weeklyContribution }, userId));
+  return NextResponse.json(await buildPlanFromQuestionnaire({ ...body, targetAmount, currentSavings, horizonYears, weeklyContribution }, userId));
 }

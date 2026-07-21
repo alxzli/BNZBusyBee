@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import walkthroughOne from "./1.png";
 import walkthroughTwo from "./2.png";
 import { ProfileSwitcher } from "@/components/profile-switcher";
-import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
+import { SKIP_WALKTHROUGH_ONCE_KEY } from "@/lib/walkthrough";
+import { defaultUserId, ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
 
 type WalkthroughStep = 0 | 1 | 2;
 
@@ -15,7 +16,7 @@ const WALKTHROUGH_REOPEN_EVENT = "bnzbusybee:walkthrough-reopen";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [activeUserId, setActiveUserId] = useState(getStoredUserId());
+  const [activeUserId, setActiveUserId] = useState(defaultUserId);
   const [walkthroughActive, setWalkthroughActive] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState<WalkthroughStep>(0);
   const overlayPanelRef = useRef<HTMLDivElement | null>(null);
@@ -37,6 +38,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (pathname !== "/") {
+      setWalkthroughActive(false);
+      return;
+    }
+
+    const shouldSkipWalkthrough = window.sessionStorage.getItem(SKIP_WALKTHROUGH_ONCE_KEY) === "1";
+
+    if (shouldSkipWalkthrough) {
+      window.sessionStorage.removeItem(SKIP_WALKTHROUGH_ONCE_KEY);
       setWalkthroughActive(false);
       return;
     }

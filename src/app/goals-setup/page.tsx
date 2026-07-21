@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildFormStateFromPlan } from "@/lib/questionnaire-form";
 import { getPlanStorageKey } from "@/lib/user-storage";
+import { SKIP_WALKTHROUGH_ONCE_KEY } from "@/lib/walkthrough";
 import { getStoredUserId } from "@/lib/wellbeing-user";
 import type { PlanRequest, PlanResponse } from "@/lib/wellbeing-types";
 
@@ -36,6 +39,7 @@ const initialForm: FormState = {
 };
 
 export default function GoalsSetupPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialForm);
   const [result, setResult] = useState<PlanResponse | null>(null);
@@ -124,12 +128,22 @@ export default function GoalsSetupPage() {
     setLoading(false);
   }
 
+  function returnToDashboardWithoutWalkthrough() {
+    window.sessionStorage.setItem(SKIP_WALKTHROUGH_ONCE_KEY, "1");
+    router.push("/");
+  }
+
   if (result) {
+    const aiStatusLabel = result.aiStatus === "live" ? "AI narrative live" : result.aiStatus === "fallback" ? "AI narrative fallback" : "Mock";
+
     return (
       <div className="space-y-10">
-        <PageBackButton mode="toHome" />
+        <PageBackButton mode="static" onClick={returnToDashboardWithoutWalkthrough} />
 
         <section className="space-y-3">
+          <Badge variant="outline" className="border-[#bcd6ea] bg-white text-[#0C2F59]">
+            {aiStatusLabel}
+          </Badge>
           <h1 className="text-5xl font-semibold tracking-tight text-[#0C2F59]">Your first-year savings path</h1>
           <p className="max-w-3xl text-lg text-[#0C2F59]/80">This setup combines your answers with detected savings opportunities from your recent spending.</p>
         </section>
@@ -160,9 +174,7 @@ export default function GoalsSetupPage() {
               </div>
             </div>
             <p className="text-sm text-[#0C2F59]/80">{result.nextStep}</p>
-            <Link href="/">
-              <Button>Return to dashboard forecast</Button>
-            </Link>
+            <Button onClick={returnToDashboardWithoutWalkthrough}>Return to dashboard forecast</Button>
           </CardContent>
         </Card>
       </div>

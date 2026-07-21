@@ -3,5 +3,5 @@ import { getWellbeingSuggestionsData } from "@/lib/wellbeing-service";
 
 export async function GET(request: NextRequest) {
   const userId = request.headers.get("x-user-id") || "alex";
-  return NextResponse.json(getWellbeingSuggestionsData(userId));
+  return NextResponse.json(await getWellbeingSuggestionsData(userId));
 }
