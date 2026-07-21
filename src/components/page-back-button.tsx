@@ -3,9 +3,10 @@ import { ChevronLeft } from "lucide-react";
 
 type PageBackButtonProps = {
   mode: "static" | "toHome";
+  onClick?: () => void;
 };
 
-export function PageBackButton({ mode }: PageBackButtonProps) {
+export function PageBackButton({ mode, onClick }: PageBackButtonProps) {
   const className = "fixed left-4 top-3 z-50 inline-flex items-center gap-1 text-lg font-medium text-[#0C2F59]";
 
   if (mode === "toHome") {
@@ -18,7 +19,7 @@ export function PageBackButton({ mode }: PageBackButtonProps) {
   }
 
   return (
-    <button type="button" className={`${className} cursor-default`}>
+    <button type="button" onClick={onClick} className={`${className} ${onClick ? "cursor-pointer" : "cursor-default"}`}>
       <ChevronLeft className="h-5 w-5" />
       Back
     </button>

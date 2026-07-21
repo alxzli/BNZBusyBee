@@ -2,67 +2,83 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import LoginPage from "@/app/login/page";
 import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPlanStorageKey } from "@/lib/user-storage";
+import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
 import type { PlanResponse, WellbeingDashboardResponse } from "@/lib/wellbeing-types";
+
+const WALKTHROUGH_REOPEN_EVENT = "bnzbusybee:walkthrough-reopen";
 
 export default function DashboardPage() {
   const [data, setData] = useState<WellbeingDashboardResponse | null>(null);
   const [savedPlan, setSavedPlan] = useState<PlanResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
+  const [activeUserId, setActiveUserId] = useState(getStoredUserId());
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("wellbeing-user");
-    if (!storedUser) {
-      setAuthState("unauthenticated");
-      setLoading(false);
-      return;
-    }
+    const syncUser = () => setActiveUserId(getStoredUserId());
 
-    setAuthState("authenticated");
+    setActiveUserId(ensureStoredUserId());
+    window.addEventListener("wellbeing-user-changed", syncUser);
+    window.addEventListener("storage", syncUser);
+    return () => {
+      window.removeEventListener("wellbeing-user-changed", syncUser);
+      window.removeEventListener("storage", syncUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
 
     async function load() {
-      const userId = storedUser;
+      setLoading(true);
       const response = await fetch("/api/wellbeing/dashboard", {
         cache: "no-store",
-        headers: { "x-user-id": userId ?? "alex" },
+        headers: { "x-user-id": activeUserId },
       });
       const payload = (await response.json()) as WellbeingDashboardResponse;
-      setData(payload);
 
       const planRaw = localStorage.getItem(getPlanStorageKey(userId));
       if (planRaw) {
         setSavedPlan(JSON.parse(planRaw) as PlanResponse);
+      if (cancelled) {
+        return;
       }
 
+      setData(payload);
+
+      const planRaw = localStorage.getItem("wellbeing-plan");
+      setSavedPlan(planRaw ? (JSON.parse(planRaw) as PlanResponse) : null);
       setLoading(false);
     }
 
-    load();
-  }, []);
+    load().catch(() => {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeUserId]);
 
   const hasForecast = Boolean(savedPlan?.forecast?.length);
 
   const topThree = useMemo(() => (data?.suggestions ?? []).slice(0, 3), [data?.suggestions]);
 
-  if (authState === "unauthenticated") {
-    return <LoginPage />;
-  }
-
-  if (authState === "loading") {
-    return <p className="text-[#0C2F59]/70">Loading...</p>;
+  function reopenWalkthrough() {
+    window.dispatchEvent(new Event(WALKTHROUGH_REOPEN_EVENT));
   }
 
   return (
-    <div className="space-y-16 pb-10">
-      <PageBackButton mode="static" />
+    <div className="space-y-12 pb-6">
+      <PageBackButton mode="static" onClick={reopenWalkthrough} />
 
-      <section className="space-y-4 pt-1">
+      <section className="space-y-3 pt-0.5">
         <h1 className="text-5xl font-semibold tracking-tight text-[#0C2F59]">BNZ Financial Wellbeing</h1>
       </section>
 
