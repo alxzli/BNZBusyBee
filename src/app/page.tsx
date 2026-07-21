@@ -41,16 +41,13 @@ export default function DashboardPage() {
       });
       const payload = (await response.json()) as WellbeingDashboardResponse;
 
-      const planRaw = localStorage.getItem(getPlanStorageKey(userId));
-      if (planRaw) {
-        setSavedPlan(JSON.parse(planRaw) as PlanResponse);
+      const planRaw = localStorage.getItem(getPlanStorageKey(activeUserId));
+
       if (cancelled) {
         return;
       }
 
       setData(payload);
-
-      const planRaw = localStorage.getItem("wellbeing-plan");
       setSavedPlan(planRaw ? (JSON.parse(planRaw) as PlanResponse) : null);
       setLoading(false);
     }
