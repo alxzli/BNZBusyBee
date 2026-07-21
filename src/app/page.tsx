@@ -6,6 +6,7 @@ import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getPlanStorageKey } from "@/lib/user-storage";
 import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
 import type { PlanResponse, WellbeingDashboardResponse } from "@/lib/wellbeing-types";
 
@@ -40,6 +41,9 @@ export default function DashboardPage() {
       });
       const payload = (await response.json()) as WellbeingDashboardResponse;
 
+      const planRaw = localStorage.getItem(getPlanStorageKey(userId));
+      if (planRaw) {
+        setSavedPlan(JSON.parse(planRaw) as PlanResponse);
       if (cancelled) {
         return;
       }
@@ -102,7 +106,9 @@ export default function DashboardPage() {
 
         <Card className="min-h-[430px]">
           <CardHeader className="space-y-5">
-            <CardTitle className="text-3xl">Forecast</CardTitle>
+            <CardTitle className="text-3xl">
+              Forecast{savedPlan?.goalType ? ` for ${savedPlan.goalType}` : ""}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {!hasForecast && (

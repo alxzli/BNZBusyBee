@@ -37,6 +37,7 @@ export type SavingsSuggestion = {
 };
 
 export type ForecastPoint = {
+  date: string;
   month: string;
   projectedBalance: number;
   contributed: number;
@@ -67,19 +68,23 @@ export type WellbeingSuggestionsResponse = {
 export type PlanRequest = {
   goalType: string;
   targetAmount: number;
-  horizonYears: number;
+  horizonYears: number | null;
   currentSavings: number;
-  weeklyContribution: number;
+  weeklyContribution: number | null;
 };
 
 export type PlanResponse = {
   generatedAt: string;
   aiStatus: "mock";
+  goalType: string;
+  questionnaireAnswers: PlanRequest;
   annualRate: number;
   estimatedOneYearGain: number;
   totalContributionsYear: number;
   annualSavingsFromSuggestions: number;
   projectedBalanceAfterOneYear: number;
+  resolvedHorizonYears: number;
+  resolvedWeeklyContribution: number;
   shortSummary: string;
   nextStep: string;
   forecast: ForecastPoint[];

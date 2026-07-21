@@ -3,6 +3,15 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { ForecastPoint } from "@/lib/wellbeing-types";
 
+function formatAxisLabel(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleDateString("en-NZ", { month: "short", day: "numeric" });
+}
+
 type GoalForecastChartProps = {
   data: ForecastPoint[];
 };
@@ -13,7 +22,14 @@ export function GoalForecastChart({ data }: GoalForecastChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />
-          <XAxis dataKey="month" stroke="#5f6f82" tickLine={false} axisLine={false} fontSize={12} />
+          <XAxis
+            dataKey="date"
+            stroke="#5f6f82"
+            tickLine={false}
+            axisLine={false}
+            fontSize={12}
+            tickFormatter={formatAxisLabel}
+          />
           <YAxis stroke="#5f6f82" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `$${value}`} width={72} />
           <Tooltip
             cursor={{ stroke: "#0f172a", strokeOpacity: 0.1 }}

@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { GoalForecastChart } from "@/components/goal-forecast-chart";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildFormStateFromPlan } from "@/lib/questionnaire-form";
+import { getPlanStorageKey } from "@/lib/user-storage";
 import { getStoredUserId } from "@/lib/wellbeing-user";
 import type { PlanRequest, PlanResponse } from "@/lib/wellbeing-types";
 
@@ -38,6 +40,31 @@ export default function GoalsSetupPage() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [result, setResult] = useState<PlanResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isAdjustingExistingPlan, setIsAdjustingExistingPlan] = useState(false);
+
+  useEffect(() => {
+    const userId = localStorage.getItem("wellbeing-user") || "alex";
+    const savedPlanRaw = localStorage.getItem(getPlanStorageKey(userId));
+    if (!savedPlanRaw) {
+      return;
+    }
+
+    try {
+      const savedPlan = JSON.parse(savedPlanRaw) as PlanResponse;
+      const answers = savedPlan?.questionnaireAnswers;
+      setForm(buildFormStateFromPlan({
+        goalType: answers?.goalType ?? savedPlan?.goalType ?? "",
+        targetAmount: answers?.targetAmount ?? null,
+        horizonYears: answers?.horizonYears ?? null,
+        currentSavings: answers?.currentSavings ?? null,
+        weeklyContribution: answers?.weeklyContribution ?? null,
+      }));
+      setIsAdjustingExistingPlan(Boolean(answers || savedPlan?.goalType));
+    } catch {
+      setForm(initialForm);
+      setIsAdjustingExistingPlan(false);
+    }
+  }, []);
 
   const currentStep = steps[step];
   const currentValue = form[currentStep.key];
@@ -45,6 +72,10 @@ export default function GoalsSetupPage() {
   const canContinue = useMemo(() => {
     if (currentStep.key === "goalType") {
       return currentValue.trim().length > 1;
+    }
+
+    if (currentStep.key === "horizonYears" || currentStep.key === "weeklyContribution") {
+      return currentValue.trim().length === 0 || Number(currentValue) > 0;
     }
 
     return Number(currentValue) > 0;
@@ -57,13 +88,24 @@ export default function GoalsSetupPage() {
     }));
   }
 
+  function parseOptionalNumber(value: string) {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return null;
+    }
+
+    const parsedValue = Number(trimmed);
+    return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
+  }
+
   async function submitPlan() {
     const payload: PlanRequest = {
       goalType: form.goalType,
       targetAmount: Number(form.targetAmount),
-      horizonYears: Number(form.horizonYears),
+      horizonYears: parseOptionalNumber(form.horizonYears),
       currentSavings: Number(form.currentSavings),
-      weeklyContribution: Number(form.weeklyContribution),
+      weeklyContribution: parseOptionalNumber(form.weeklyContribution),
     };
 
     setLoading(true);
@@ -78,7 +120,7 @@ export default function GoalsSetupPage() {
     });
     const plan = (await response.json()) as PlanResponse;
     setResult(plan);
-    localStorage.setItem("wellbeing-plan", JSON.stringify(plan));
+    localStorage.setItem(getPlanStorageKey(userId), JSON.stringify(plan));
     setLoading(false);
   }
 
@@ -99,10 +141,14 @@ export default function GoalsSetupPage() {
           </CardHeader>
           <CardContent className="space-y-5">
             <GoalForecastChart data={result.forecast} />
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-4">
               <div className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">Weekly contribution</p>
-                <p className="mt-2 text-2xl font-semibold text-[#0C2F59]">${form.weeklyContribution}</p>
+                <p className="mt-2 text-2xl font-semibold text-[#0C2F59]">${result.resolvedWeeklyContribution.toFixed(0)}</p>
+              </div>
+              <div className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
+                <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">Estimated horizon</p>
+                <p className="mt-2 text-2xl font-semibold text-[#0C2F59]">{result.resolvedHorizonYears.toFixed(1)} years</p>
               </div>
               <div className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">Annual from suggestions</p>
@@ -129,7 +175,11 @@ export default function GoalsSetupPage() {
 
       <section className="space-y-3">
         <h1 className="text-5xl font-semibold tracking-tight text-[#0C2F59]">5-minute goal questionnaire</h1>
-        <p className="max-w-3xl text-lg text-[#0C2F59]/80">Answer five simple questions and we will prepare a BNZ savings account yearly projection.</p>
+        <p className="max-w-3xl text-lg text-[#0C2F59]/80">
+          {isAdjustingExistingPlan
+            ? "Update your current answers and we’ll rebuild your savings forecast."
+            : "Answer five simple questions and we will prepare a BNZ savings account yearly projection."}
+        </p>
       </section>
 
       <Card className="max-w-3xl">
@@ -137,6 +187,9 @@ export default function GoalsSetupPage() {
           <p className="text-sm uppercase tracking-[0.18em] text-[#0C2F59]/70">
             Question {step + 1} of {steps.length}
           </p>
+          {isAdjustingExistingPlan && (
+            <p className="text-sm text-[#0C2F59]/70">You’re updating your current answers below.</p>
+          )}
           <CardTitle className="text-3xl">{currentStep.title}</CardTitle>
           <input
             value={currentValue}
@@ -145,6 +198,12 @@ export default function GoalsSetupPage() {
             inputMode={currentStep.key === "goalType" ? "text" : "numeric"}
             className="w-full rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] px-5 py-5 text-2xl font-semibold text-[#0C2F59] outline-none transition focus:border-[#7fb8da] focus:bg-white"
           />
+          {currentStep.key === "horizonYears" && (
+            <p className="text-sm text-[#0C2F59]/70">Leave this blank and we’ll estimate how many years it would take to reach the goal.</p>
+          )}
+          {currentStep.key === "weeklyContribution" && (
+            <p className="text-sm text-[#0C2F59]/70">Leave this blank and we’ll calculate how much you need to put aside each week.</p>
+          )}
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-between">
           <Button variant="ghost" onClick={() => setStep((current) => Math.max(0, current - 1))}>

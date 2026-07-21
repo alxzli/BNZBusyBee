@@ -105,6 +105,11 @@ function detectSuggestionSet(userId = "alex"): SavingsSuggestion[] {
   return suggestions.sort((a, b) => b.annualSavings - a.annualSavings);
 }
 
+function getDefaultGoalName(userId = "alex") {
+  const { savingsGoals } = loadUserProfileFinancialData(userId);
+  return savingsGoals[0]?.name || "a savings goal";
+}
+
 function buildForecast(startingBalance: number, weeklyContribution: number, annualSuggestionSavings: number, annualRate = BNZ_SAVINGS_ANNUAL_RATE): ForecastPoint[] {
   const monthlyRate = getMonthlyRate(annualRate);
   const monthlyContribution = (weeklyContribution * 52 + annualSuggestionSavings) / 12;
@@ -112,6 +117,7 @@ function buildForecast(startingBalance: number, weeklyContribution: number, annu
   const points: ForecastPoint[] = [];
   let balance = startingBalance;
   let contributionTotal = 0;
+  const startDate = new Date();
 
   for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
     contributionTotal += monthlyContribution;
@@ -120,7 +126,10 @@ function buildForecast(startingBalance: number, weeklyContribution: number, annu
     const interest = balance * monthlyRate;
     balance += interest;
 
+    const pointDate = new Date(startDate.getFullYear(), startDate.getMonth() + monthIndex, startDate.getDate());
+
     points.push({
+      date: `${pointDate.getFullYear()}-${String(pointDate.getMonth() + 1).padStart(2, "0")}-${String(pointDate.getDate()).padStart(2, "0")}`,
       month: monthNames[monthIndex],
       projectedBalance: toCurrency(balance),
       contributed: toCurrency(contributionTotal),
@@ -129,6 +138,107 @@ function buildForecast(startingBalance: number, weeklyContribution: number, annu
   }
 
   return points;
+}
+
+function estimateMonthsToTarget(startingBalance: number, targetAmount: number, monthlyContribution: number, annualRate = BNZ_SAVINGS_ANNUAL_RATE) {
+  if (targetAmount <= startingBalance) {
+    return 0;
+  }
+
+  if (monthlyContribution <= 0) {
+    return 600;
+  }
+
+  const monthlyRate = getMonthlyRate(annualRate);
+  let balance = startingBalance;
+  let months = 0;
+
+  while (balance < targetAmount && months < 600) {
+    balance += monthlyContribution;
+    const interest = balance * monthlyRate;
+    balance += interest;
+    months += 1;
+  }
+
+  return months;
+}
+
+function estimateWeeklyContributionNeeded(startingBalance: number, targetAmount: number, horizonYears: number, annualSuggestionSavings: number, annualRate = BNZ_SAVINGS_ANNUAL_RATE) {
+  if (targetAmount <= startingBalance) {
+    return 0;
+  }
+
+  const monthsToTarget = Math.max(1, Math.round(horizonYears * 12));
+  const monthlyRate = getMonthlyRate(annualRate);
+
+  const canReachTarget = (weeklyContribution: number) => {
+    let balance = startingBalance;
+    const monthlyContribution = (weeklyContribution * 52 + annualSuggestionSavings) / 12;
+
+    for (let monthIndex = 0; monthIndex < monthsToTarget; monthIndex += 1) {
+      balance += monthlyContribution;
+      const interest = balance * monthlyRate;
+      balance += interest;
+    }
+
+    return balance >= targetAmount;
+  };
+
+  let low = 0;
+  let high = Math.max(50, targetAmount / 4);
+
+  while (!canReachTarget(high)) {
+    high *= 2;
+
+    if (high > 1_000_000) {
+      return 0;
+    }
+  }
+
+  for (let index = 0; index < 60; index += 1) {
+    const midpoint = (low + high) / 2;
+
+    if (canReachTarget(midpoint)) {
+      high = midpoint;
+    } else {
+      low = midpoint;
+    }
+  }
+
+  return toCurrency(high);
+}
+
+export function resolveGoalInputs(payload: PlanRequest, annualSuggestionSavings: number, annualRate = BNZ_SAVINGS_ANNUAL_RATE) {
+  const hasProvidedHorizon = typeof payload.horizonYears === "number" && payload.horizonYears > 0;
+  const hasProvidedWeeklyContribution = typeof payload.weeklyContribution === "number" && payload.weeklyContribution > 0;
+
+  let resolvedHorizonYears = hasProvidedHorizon ? payload.horizonYears ?? 0 : 0;
+  let resolvedWeeklyContribution = hasProvidedWeeklyContribution ? payload.weeklyContribution ?? 0 : 0;
+
+  if (!hasProvidedHorizon) {
+    if (hasProvidedWeeklyContribution) {
+      const monthlyContribution = ((payload.weeklyContribution ?? 0) * 52 + annualSuggestionSavings) / 12;
+      const monthsNeeded = estimateMonthsToTarget(payload.currentSavings, payload.targetAmount, monthlyContribution, annualRate);
+      resolvedHorizonYears = monthsNeeded === 0 ? 0 : monthsNeeded / 12;
+    } else {
+      resolvedHorizonYears = 5;
+    }
+  }
+
+  if (!hasProvidedWeeklyContribution) {
+    resolvedWeeklyContribution = estimateWeeklyContributionNeeded(
+      payload.currentSavings,
+      payload.targetAmount,
+      resolvedHorizonYears || 5,
+      annualSuggestionSavings,
+      annualRate,
+    );
+  }
+
+  return {
+    resolvedHorizonYears: toCurrency(resolvedHorizonYears),
+    resolvedWeeklyContribution: toCurrency(resolvedWeeklyContribution),
+  };
 }
 
 export function getWellbeingDashboardData(userId = "alex"): WellbeingDashboardResponse {
@@ -163,20 +273,36 @@ export function getWellbeingSuggestionsData(userId = "alex"): WellbeingSuggestio
 export function buildPlanFromQuestionnaire(payload: PlanRequest, userId = "alex"): PlanResponse {
   const suggestions = detectSuggestionSet(userId);
   const annualSavingsFromSuggestions = toCurrency(suggestions.reduce((sum, item) => sum + item.annualSavings, 0));
-  const totalContributionsYear = toCurrency(annualizeFromWeekly(payload.weeklyContribution));
-  const forecast = buildForecast(payload.currentSavings, payload.weeklyContribution, annualSavingsFromSuggestions);
+  const { resolvedHorizonYears, resolvedWeeklyContribution } = resolveGoalInputs(payload, annualSavingsFromSuggestions);
+  const totalContributionsYear = toCurrency(annualizeFromWeekly(resolvedWeeklyContribution));
+  const forecast = buildForecast(payload.currentSavings, resolvedWeeklyContribution, annualSavingsFromSuggestions);
   const projectedBalanceAfterOneYear = forecast[forecast.length - 1]?.projectedBalance ?? payload.currentSavings;
+
+  const goalLabel = payload.goalType || getDefaultGoalName(userId);
+  const summary = payload.horizonYears == null || payload.horizonYears <= 0
+    ? `Based on your current savings and the information you shared, your ${goalLabel.toLowerCase()} goal would take about ${resolvedHorizonYears.toFixed(1)} years to reach if you save $${resolvedWeeklyContribution}/week.`
+    : `If you redirect around $${toCurrency(annualSavingsFromSuggestions / 52)} each week from suggestions and save $${resolvedWeeklyContribution}/week, you could reach about $${projectedBalanceAfterOneYear} in one year.`;
 
   return {
     generatedAt: new Date().toISOString(),
     aiStatus: "mock",
+    goalType: payload.goalType,
+    questionnaireAnswers: {
+      goalType: payload.goalType,
+      targetAmount: payload.targetAmount,
+      horizonYears: payload.horizonYears,
+      currentSavings: payload.currentSavings,
+      weeklyContribution: payload.weeklyContribution,
+    },
     annualRate: BNZ_SAVINGS_ANNUAL_RATE,
     estimatedOneYearGain: toCurrency(projectedBalanceAfterOneYear - payload.currentSavings),
     totalContributionsYear,
     annualSavingsFromSuggestions,
     projectedBalanceAfterOneYear,
-    shortSummary: `If you redirect around $${toCurrency(annualSavingsFromSuggestions / 52)} each week from suggestions and save $${payload.weeklyContribution}/week, you could reach about $${projectedBalanceAfterOneYear} in one year.`,
-    nextStep: `Focus on ${payload.goalType.toLowerCase()} with a ${payload.horizonYears}-year horizon and review progress monthly.`,
+    resolvedHorizonYears,
+    resolvedWeeklyContribution,
+    shortSummary: summary,
+    nextStep: `Focus on ${goalLabel.toLowerCase()} with a ${resolvedHorizonYears.toFixed(1)}-year horizon and review progress monthly.`,
     forecast,
   };
 }
