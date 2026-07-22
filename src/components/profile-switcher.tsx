@@ -12,7 +12,7 @@ function UserAvatar({ label, isActive }: { label: string; isActive: boolean }) {
     : "bg-[#e9eef4] text-[#8da0b4] border-[#d4dee8]";
 
   return (
-    <span className={`flex h-9 w-9 items-center justify-center rounded-none border border-white/60 shadow-sm ${className}`}>
+    <span className={`flex h-9 w-9 items-center justify-center rounded-none border border-white/60 shadow-sm ${isActive}`}>
       <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-current">
         <path d="M12 12.25a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5Zm0 1.75c-4.09 0-7.5 2.43-7.5 5.5a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5c0-3.07-3.41-5.5-7.5-5.5Z" />
       </svg>
