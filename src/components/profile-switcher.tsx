@@ -122,32 +122,6 @@ export function ProfileSwitcher({ activeUserId }: { activeUserId: string }) {
           </div>
         </div>
       )}
-
-      <div className="flex items-center gap-2 rounded-[0.85rem] border border-[#c7d9ea] bg-[#f7fbfd] px-2 py-1 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-        <span className="hidden rounded-full bg-[#0C2F59] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white md:inline-flex">
-          Profiles
-        </span>
-        {userProfiles.map((profile) => {
-          const isActive = profile.id === activeUserId;
-
-          return (
-            <button
-              key={profile.id}
-              type="button"
-              onClick={() => setStoredUserId(profile.id)}
-              aria-pressed={isActive}
-              aria-label={`Switch to ${profile.label}`}
-              className={`flex items-center gap-2 rounded-[0.65rem] px-2 py-1.5 text-left transition ${isActive ? "bg-white ring-1 ring-[#7fb8da] shadow-sm" : "text-[#0C2F59]/70 hover:bg-white/70 hover:text-[#0C2F59]"}`}
-            >
-              <UserAvatar label={profile.label} className={profile.avatarClassName} />
-              <span className="hidden min-w-0 md:block">
-                <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0C2F59]/45">Profile</span>
-                <span className="block text-sm font-semibold text-[#0C2F59]">{profile.label}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }

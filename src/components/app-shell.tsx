@@ -5,6 +5,8 @@ import { ChevronRight, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import walkthroughOne from "./1.png";
 import walkthroughTwo from "./2.png";
+import { ProfileSwitcher } from "@/components/profile-switcher";
+import { defaultUserId, ensureStoredUserId, getStoredUserId, type UserProfileId } from "@/lib/wellbeing-user";
 import { SKIP_WALKTHROUGH_ONCE_KEY } from "@/lib/walkthrough";
 
 type WalkthroughStep = 0 | 1 | 2;
@@ -13,9 +15,25 @@ const WALKTHROUGH_REOPEN_EVENT = "bnzbusybee:walkthrough-reopen";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [activeUserId, setActiveUserId] = useState<UserProfileId>(defaultUserId);
   const [walkthroughActive, setWalkthroughActive] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState<WalkthroughStep>(0);
   const overlayPanelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      setActiveUserId(getStoredUserId());
+    };
+
+    syncAuthState();
+    setActiveUserId(ensureStoredUserId());
+    window.addEventListener("wellbeing-user-changed", syncAuthState);
+    window.addEventListener("storage", syncAuthState);
+    return () => {
+      window.removeEventListener("wellbeing-user-changed", syncAuthState);
+      window.removeEventListener("storage", syncAuthState);
+    };
+  }, []);
 
   useEffect(() => {
     if (pathname !== "/") {
@@ -126,6 +144,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-transparent px-4 py-2 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-4 px-6 py-3 lg:px-10 lg:py-4">
+        <div className="flex justify-start">
+          <ProfileSwitcher activeUserId={activeUserId} />
+        </div>
         <main>{children}</main>
       </div>
 
