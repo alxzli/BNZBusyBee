@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PageBackButton } from "@/components/page-back-button";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { defaultUserId, ensureStoredUserId, getStoredUserId, type UserProfileId } from "@/lib/wellbeing-user";
@@ -56,12 +57,17 @@ export default function SuggestionsPage() {
   }, [activeUserId]);
 
   const suggestions: SavingsSuggestion[] = data?.suggestions ?? [];
+  const aiStatusLabel = "Mock";
+  const sourceHint = "Mock estimate based on recent transactions and recurring behavior.";
 
   return (
     <div className="space-y-12">
       <PageBackButton mode="toHome" />
 
       <section className="space-y-3">
+        <Badge variant="outline" className="border-[#bcd6ea] bg-white text-[#0C2F59]">
+          {aiStatusLabel}
+        </Badge>
         <h1 className="text-5xl font-semibold tracking-tight text-[#0C2F59]">AI suggestion details</h1>
         <p className="max-w-3xl text-lg text-[#0C2F59]/80">
           Why each suggestion appeared, what pattern triggered it, and how much it could add to your BNZ savings account over a year.
@@ -71,7 +77,7 @@ export default function SuggestionsPage() {
       <section className="rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-8 shadow-[0_1px_3px_rgba(15,23,42,0.06)] sm:p-10">
         <p className="text-sm uppercase tracking-[0.18em] text-[#0C2F59]/70">Annual potential</p>
         <p className="mt-3 text-5xl font-semibold text-[#0C2F59]">${data?.annualSavingsTotal.toFixed(0) ?? "0"}</p>
-        <p className="mt-2 text-sm text-[#0C2F59]/70">Mock estimate based on recent transactions and recurring behavior.</p>
+        <p className="mt-2 text-sm text-[#0C2F59]/70">{sourceHint}</p>
       </section>
 
       <section className="grid gap-6">

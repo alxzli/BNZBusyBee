@@ -262,6 +262,7 @@ export function getWellbeingDashboardData(userId = "alex"): WellbeingDashboardRe
 
 export function getWellbeingSuggestionsData(userId = "alex"): WellbeingSuggestionsResponse {
   const suggestions = detectSuggestionSet(userId);
+
   return {
     generatedAt: new Date().toISOString(),
     aiStatus: "mock",

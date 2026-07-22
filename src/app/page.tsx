@@ -53,6 +53,7 @@ export default function DashboardPage() {
       }
 
       setData(payload);
+      setSavedPlan(planRaw ? (JSON.parse(planRaw) as PlanResponse) : null);
       setLoading(false);
     }
 
@@ -91,17 +92,27 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {loading && <p className="text-[#0C2F59]/70">Loading...</p>}
-            {!loading &&
-              topThree.map((item) => (
-                <div key={item.id} className="space-y-1">
-                  <p className="text-2xl font-semibold text-[#0C2F59]">{item.title}</p>
-                  <p className="text-base text-[#0C2F59]/80">Based on {item.reason.toLowerCase()}</p>
-                </div>
-              ))}
+            {!loading && (
+              <div className="space-y-4">
+                {topThree.map((item) => (
+                  <div key={item.id} className="rounded-[0.75rem] border border-[#d5e3ef] bg-[#E5F2F8] p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-2">
+                        <p className="text-2xl font-semibold text-[#0C2F59]">{item.title}</p>
+                        <p className="text-sm text-[#0C2F59]/80">{item.reason}</p>
+                      </div>
+                      <p className="shrink-0 text-lg font-semibold text-[#0C2F59]">${item.monthlySavings.toFixed(0)}/mo</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-            <Link href="/suggestions" className="block pt-4 text-2xl text-[#0C2F59] underline-offset-4 hover:underline">
-              View more suggestions...
-            </Link>
+            <div className="pt-1">
+              <Link href="/suggestions" className="inline-flex">
+                <Button variant="secondary" className="min-w-[14rem]">View more suggestions</Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
 
