@@ -1,13 +1,12 @@
 ﻿"use client";
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import walkthroughOne from "./1.png";
 import walkthroughTwo from "./2.png";
 import { ProfileSwitcher } from "@/components/profile-switcher";
-import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
+import { defaultUserId, ensureStoredUserId, getStoredUserId, type UserProfileId } from "@/lib/wellbeing-user";
 
 type WalkthroughStep = 0 | 1 | 2;
 
@@ -15,7 +14,7 @@ const WALKTHROUGH_REOPEN_EVENT = "bnzbusybee:walkthrough-reopen";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [activeUserId, setActiveUserId] = useState(getStoredUserId());
+  const [activeUserId, setActiveUserId] = useState<UserProfileId>(defaultUserId);
   const [walkthroughActive, setWalkthroughActive] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState<WalkthroughStep>(0);
   const overlayPanelRef = useRef<HTMLDivElement | null>(null);
@@ -93,12 +92,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const spotlightClasses = {
     1: {
-      ring: "left-[0.45%] top-[0.5%] h-[3.6rem] w-[9.4rem] rounded-[1rem]",
-      hitbox: "left-[0.45%] top-[0.5%] h-[3.6rem] w-[9.4rem] rounded-[1rem]",
+      ring: "left-[0.45%] top-[0.5%] h-[3.6rem] w-[9.4rem] rounded-none",
+      hitbox: "left-[0.45%] top-[0.5%] h-[3.6rem] w-[9.4rem] rounded-none",
     },
     2: {
-      ring: "left-[0.6%] top-[27.6%] h-[4rem] w-[13.4rem] rounded-[1rem]",
-      hitbox: "left-[0.6%] top-[27.6%] h-[4rem] w-[13.4rem] rounded-[1rem]",
+      ring: "left-[0.6%] top-[27.6%] h-[4rem] w-[13.4rem] rounded-none",
+      hitbox: "left-[0.6%] top-[27.6%] h-[4rem] w-[13.4rem] rounded-none",
     },
   } as const;
 
@@ -136,16 +135,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-transparent px-4 py-2 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-4 px-6 py-3 lg:px-10 lg:py-4">
-        <header className="relative flex items-center rounded-[0.75rem] border border-[#d5e3ef] bg-white/80 px-4 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
-          <Link href="/" className="group">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#0C2F59]/70 transition group-hover:text-[#0C2F59]">BNZ BusyBee</p>
-            <p className="text-sm text-[#0C2F59]/70">Financial wellbeing demo</p>
-          </Link>
-
-          <div className="ml-auto flex items-center gap-2">
-            <ProfileSwitcher activeUserId={activeUserId} />
-          </div>
-        </header>
+        <div className="flex justify-end">
+          <ProfileSwitcher activeUserId={activeUserId} />
+        </div>
         <main>{children}</main>
       </div>
 
@@ -186,9 +178,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div
               ref={overlayPanelRef}
               tabIndex={-1}
-              className={`absolute w-[min(30rem,calc(100vw-2rem))] rounded-[1.75rem] border border-white/80 bg-[rgba(251,253,255,0.985)] p-6 text-[#08294D] shadow-[0_36px_110px_rgba(0,0,0,0.42)] backdrop-blur-xl sm:p-8 ${panelPositionClasses[walkthroughStep]}`}
+              className={`absolute w-[min(30rem,calc(100vw-2rem))] rounded-none border border-white/80 bg-[rgba(251,253,255,0.985)] p-6 text-[#08294D] shadow-[0_36px_110px_rgba(0,0,0,0.42)] backdrop-blur-xl sm:p-8 ${panelPositionClasses[walkthroughStep]}`}
             >
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#D8A625]/35 bg-[#FFF3C9] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8A5A00]">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-none border border-[#D8A625]/35 bg-[#FFF3C9] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8A5A00]">
                 <Sparkles className="h-3.5 w-3.5" />
                 {activeCopy.accent}
               </div>
@@ -200,7 +192,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <button
                     type="button"
                     onClick={() => setWalkthroughStep(1)}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#0C2F59] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#103c6d]"
+                    className="inline-flex items-center gap-2 rounded-none bg-[#0C2F59] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#103c6d]"
                   >
                     {stepCopy[0].buttonLabel}
                     <ChevronRight className="h-4 w-4" />

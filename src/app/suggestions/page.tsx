@@ -5,13 +5,13 @@ import Link from "next/link";
 import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
+import { defaultUserId, ensureStoredUserId, getStoredUserId, type UserProfileId } from "@/lib/wellbeing-user";
 import type { SavingsSuggestion, WellbeingSuggestionsResponse } from "@/lib/wellbeing-types";
 
 export default function SuggestionsPage() {
   const [data, setData] = useState<WellbeingSuggestionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeUserId, setActiveUserId] = useState(getStoredUserId());
+  const [activeUserId, setActiveUserId] = useState<UserProfileId>(defaultUserId);
 
   useEffect(() => {
     const syncUser = () => setActiveUserId(getStoredUserId());
@@ -68,7 +68,7 @@ export default function SuggestionsPage() {
         </p>
       </section>
 
-      <section className="rounded-[0.75rem] border border-[#d5e3ef] bg-[#E5F2F8] p-8 shadow-[0_1px_3px_rgba(15,23,42,0.06)] sm:p-10">
+      <section className="rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-8 shadow-[0_1px_3px_rgba(15,23,42,0.06)] sm:p-10">
         <p className="text-sm uppercase tracking-[0.18em] text-[#0C2F59]/70">Annual potential</p>
         <p className="mt-3 text-5xl font-semibold text-[#0C2F59]">${data?.annualSavingsTotal.toFixed(0) ?? "0"}</p>
         <p className="mt-2 text-sm text-[#0C2F59]/70">Mock estimate based on recent transactions and recurring behavior.</p>
@@ -89,7 +89,7 @@ export default function SuggestionsPage() {
               <CardContent className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-3">
                   {item.evidence.map((detail) => (
-                    <div key={detail.label} className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
+                    <div key={detail.label} className="rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-4">
                       <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">{detail.label}</p>
                       <p className="mt-2 text-sm font-medium text-[#0C2F59]">{detail.value}</p>
                     </div>

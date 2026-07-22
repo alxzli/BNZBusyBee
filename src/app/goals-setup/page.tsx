@@ -142,19 +142,19 @@ export default function GoalsSetupPage() {
           <CardContent className="space-y-5">
             <GoalForecastChart data={result.forecast} />
             <div className="grid gap-4 sm:grid-cols-4">
-              <div className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
+              <div className="rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">Weekly contribution</p>
                 <p className="mt-2 text-2xl font-semibold text-[#0C2F59]">${result.resolvedWeeklyContribution.toFixed(0)}</p>
               </div>
-              <div className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
+              <div className="rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">Estimated horizon</p>
                 <p className="mt-2 text-2xl font-semibold text-[#0C2F59]">{result.resolvedHorizonYears.toFixed(1)} years</p>
               </div>
-              <div className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
+              <div className="rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">Annual from suggestions</p>
                 <p className="mt-2 text-2xl font-semibold text-[#0C2F59]">${result.annualSavingsFromSuggestions.toFixed(0)}</p>
               </div>
-              <div className="rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
+              <div className="rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#0C2F59]/70">BNZ savings rate</p>
                 <p className="mt-2 text-2xl font-semibold text-[#0C2F59]">{(result.annualRate * 100).toFixed(1)}% p.a.</p>
               </div>
@@ -196,7 +196,7 @@ export default function GoalsSetupPage() {
             onChange={(event) => setCurrentValue(event.target.value)}
             placeholder={currentStep.placeholder}
             inputMode={currentStep.key === "goalType" ? "text" : "numeric"}
-            className="w-full rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] px-5 py-5 text-2xl font-semibold text-[#0C2F59] outline-none transition focus:border-[#7fb8da] focus:bg-white"
+            className="w-full rounded-none border border-[#d5e3ef] bg-[#E5F2F8] px-5 py-5 text-2xl font-semibold text-[#0C2F59] outline-none transition focus:border-[#7fb8da] focus:bg-white"
           />
           {currentStep.key === "horizonYears" && (
             <p className="text-sm text-[#0C2F59]/70">Leave this blank and we’ll estimate how many years it would take to reach the goal.</p>

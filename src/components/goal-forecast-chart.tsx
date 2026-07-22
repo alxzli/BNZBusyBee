@@ -18,7 +18,7 @@ type GoalForecastChartProps = {
 
 export function GoalForecastChart({ data }: GoalForecastChartProps) {
   return (
-    <div className="h-[280px] w-full rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-4">
+    <div className="h-[280px] w-full rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-4">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#dbe2ea" />

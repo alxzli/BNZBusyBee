@@ -7,7 +7,7 @@ import { PageBackButton } from "@/components/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPlanStorageKey } from "@/lib/user-storage";
-import { ensureStoredUserId, getStoredUserId } from "@/lib/wellbeing-user";
+import { defaultUserId, ensureStoredUserId, getStoredUserId, type UserProfileId } from "@/lib/wellbeing-user";
 import type { PlanResponse, WellbeingDashboardResponse } from "@/lib/wellbeing-types";
 
 const WALKTHROUGH_REOPEN_EVENT = "bnzbusybee:walkthrough-reopen";
@@ -16,7 +16,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<WellbeingDashboardResponse | null>(null);
   const [savedPlan, setSavedPlan] = useState<PlanResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeUserId, setActiveUserId] = useState(getStoredUserId());
+  const [activeUserId, setActiveUserId] = useState<UserProfileId>(defaultUserId);
 
   useEffect(() => {
     const syncUser = () => setActiveUserId(getStoredUserId());
@@ -113,7 +113,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {!hasForecast && (
-              <div className="space-y-6 rounded-[0.625rem] border border-[#d5e3ef] bg-[#E5F2F8] p-6">
+              <div className="space-y-6 rounded-none border border-[#d5e3ef] bg-[#E5F2F8] p-6">
                 <p className="text-2xl font-medium text-[#0C2F59]">{data?.hero.title}</p>
                 <p className="text-base text-[#0C2F59]/80">{data?.hero.subtitle}</p>
                 <Link href="/goals-setup">
